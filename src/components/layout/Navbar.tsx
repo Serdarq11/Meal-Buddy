@@ -1,13 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, UtensilsCrossed } from "lucide-react";
+import { Menu, X, UtensilsCrossed, MessageCircle, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
   
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -41,20 +55,62 @@ export const Navbar = () => {
             >
               My Matches
             </Link>
+            {user && (
+              <Link 
+                to="/messages" 
+                className={`text-sm font-medium transition-colors flex items-center gap-1.5 ${isActive('/messages') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <MessageCircle className="w-4 h-4" />
+                Messages
+              </Link>
+            )}
           </div>
           
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/auth">
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-                Sign In
-              </Button>
-            </Link>
-            <Link to="/auth?mode=signup">
-              <Button className="gradient-warm text-primary-foreground">
-                Sign Up
-              </Button>
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="gradient-warm text-primary-foreground">
+                        {user.email?.[0].toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{user.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/messages">Messages</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth?mode=signup">
+                  <Button className="gradient-warm text-primary-foreground">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
           
           {/* Mobile Menu Button */}
@@ -91,13 +147,39 @@ export const Navbar = () => {
               >
                 My Matches
               </Link>
+              {user && (
+                <Link 
+                  to="/messages" 
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1.5"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Messages
+                </Link>
+              )}
               <div className="flex gap-3 pt-4 border-t border-border">
-                <Link to="/auth" className="flex-1" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full">Sign In</Button>
-                </Link>
-                <Link to="/auth?mode=signup" className="flex-1" onClick={() => setIsOpen(false)}>
-                  <Button className="w-full gradient-warm text-primary-foreground">Sign Up</Button>
-                </Link>
+                {user ? (
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      handleSignOut();
+                      setIsOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <>
+                    <Link to="/auth" className="flex-1" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" className="w-full">Sign In</Button>
+                    </Link>
+                    <Link to="/auth?mode=signup" className="flex-1" onClick={() => setIsOpen(false)}>
+                      <Button className="w-full gradient-warm text-primary-foreground">Sign Up</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
