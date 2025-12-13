@@ -1,13 +1,27 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Navbar } from "@/components/layout/Navbar";
+import { Hero } from "@/components/landing/Hero";
+import { Features } from "@/components/landing/Features";
+import { LocationPreview } from "@/components/landing/LocationPreview";
+import { CTA } from "@/components/landing/CTA";
+import { Helmet } from "react-helmet-async";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <>
+      <Helmet>
+        <title>MealBuddy - Find Your Campus Meal Companion</title>
+        <meta name="description" content="Connect with fellow university students for meals at campus locations. Make new friends and never eat alone again." />
+      </Helmet>
+      <div className="min-h-screen">
+        <Navbar />
+        <main className="pt-16">
+          <Hero />
+          <Features />
+          <LocationPreview />
+          <CTA />
+        </main>
       </div>
-    </div>
+    </>
   );
 };
 
