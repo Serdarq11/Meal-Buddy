@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { MapPin, Clock, Users, Eye, EyeOff, Shuffle, Search, Plus, Check } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { toast } from "sonner";
 
 const locations = [
   { id: 1, name: "Cafeteria", users: 12, emoji: "🍽️" },
@@ -27,6 +28,7 @@ const Dashboard = () => {
   const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
   const [matchMode, setMatchMode] = useState<'random' | 'manual'>('random');
+  const [isSearching, setIsSearching] = useState(false);
 
   const toggleTime = (time: string) => {
     setSelectedTimes(prev => 
@@ -34,6 +36,21 @@ const Dashboard = () => {
         ? prev.filter(t => t !== time)
         : [...prev, time]
     );
+  };
+
+  const handleFindBuddy = () => {
+    if (!selectedLocation || selectedTimes.length === 0) return;
+    
+    const locationName = locations.find(l => l.id === selectedLocation)?.name;
+    setIsSearching(true);
+    
+    // Simulate search (matching backend will be implemented later)
+    setTimeout(() => {
+      setIsSearching(false);
+      toast.success(`Looking for a meal buddy at ${locationName}!`, {
+        description: `${matchMode === 'random' ? 'Random matching' : 'Manual browsing'} for ${selectedTimes.join(', ')}`,
+      });
+    }, 1500);
   };
 
   return (
@@ -236,10 +253,20 @@ const Dashboard = () => {
                   
                   <Button 
                     className="w-full gradient-warm text-primary-foreground shadow-warm"
-                    disabled={!selectedLocation || selectedTimes.length === 0}
+                    disabled={!selectedLocation || selectedTimes.length === 0 || isSearching}
+                    onClick={handleFindBuddy}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Find Meal Buddy
+                    {isSearching ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                        Searching...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Find Meal Buddy
+                      </>
+                    )}
                   </Button>
                   
                   {(!selectedLocation || selectedTimes.length === 0) && (
