@@ -9,6 +9,15 @@ import { Send, ArrowLeft, EyeOff, MessageCircle } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+import { toast } from "sonner";
+
+const messageSchema = z.object({
+  content: z.string()
+    .min(1, 'Message cannot be empty')
+    .max(2000, 'Message too long (max 2000 characters)')
+    .transform(val => val.trim())
+});
 
 interface Message {
   id: string;
@@ -81,16 +90,26 @@ const Messages = () => {
   }, [user, selectedConversation]);
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !user || !selectedConversation) return;
+    if (!user || !selectedConversation) return;
 
-    const { error } = await supabase.from('messages').insert({
-      content: newMessage.trim(),
-      sender_id: user.id,
-      receiver_id: selectedConversation.userId,
-    });
+    try {
+      const validated = messageSchema.parse({ content: newMessage });
 
-    if (!error) {
-      setNewMessage("");
+      const { error } = await supabase.from('messages').insert({
+        content: validated.content,
+        sender_id: user.id,
+        receiver_id: selectedConversation.userId,
+      });
+
+      if (error) {
+        toast.error('Failed to send message');
+      } else {
+        setNewMessage("");
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      }
     }
   };
 
