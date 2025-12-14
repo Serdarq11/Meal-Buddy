@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { MapPin, Clock, Users, Eye, EyeOff, Shuffle, Search, Plus, Check } from "lucide-react";
 import { Helmet } from "react-helmet-async";
-import { toast } from "sonner";
+import { useMatches } from "@/hooks/useMatches";
 
 const locations = [
   { id: 1, name: "Cafeteria", users: 12, emoji: "🍽️" },
@@ -24,6 +25,8 @@ const timeSlots = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { addMatchRequest } = useMatches();
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
@@ -42,14 +45,18 @@ const Dashboard = () => {
     if (!selectedLocation || selectedTimes.length === 0) return;
     
     const locationName = locations.find(l => l.id === selectedLocation)?.name;
+    if (!locationName) return;
+    
     setIsSearching(true);
     
-    // Simulate search (matching backend will be implemented later)
     setTimeout(() => {
       setIsSearching(false);
-      toast.success(`Looking for a meal buddy at ${locationName}!`, {
-        description: `${matchMode === 'random' ? 'Random matching' : 'Manual browsing'} for ${selectedTimes.join(', ')}`,
-      });
+      addMatchRequest(locationName, selectedTimes, isAnonymous, matchMode);
+      // Reset selections
+      setSelectedLocation(null);
+      setSelectedTimes([]);
+      // Navigate to matches page
+      navigate('/matches');
     }, 1500);
   };
 
