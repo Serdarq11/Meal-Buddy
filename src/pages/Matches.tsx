@@ -113,7 +113,7 @@ const Matches = () => {
                       </div>
                       <div className="flex items-center gap-1.5 text-muted-foreground">
                         <Clock className="w-4 h-4" />
-                        <span>{match.time.join(', ')}</span>
+                        <span>{Array.isArray(match.time) ? match.time.join(', ') : match.time}</span>
                       </div>
                     </div>
                     
@@ -198,7 +198,7 @@ const Matches = () => {
                         </div>
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                           <Clock className="w-3.5 h-3.5" />
-                          <span>{match.time.join(', ')}</span>
+                          <span>{Array.isArray(match.time) ? match.time.join(', ') : match.time}</span>
                         </div>
                       </div>
                     </div>
