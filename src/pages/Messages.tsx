@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Send, ArrowLeft, EyeOff, MessageCircle } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { toast } from "sonner";
 
@@ -35,14 +34,45 @@ interface Conversation {
   userId: string;
 }
 
+const BUDDY_RESPONSES = [
+  "Hey! I'm doing great, how about you?",
+  "Nice to meet you! Looking forward to our meal together 🍽️",
+  "I'll be right there at the scheduled time!",
+  "Sounds good! See you soon at the cafeteria",
+  "Perfect! I'm already on my way",
+  "Great! What do you usually like to eat there?",
+  "Awesome! It's nice to have a meal buddy 😊",
+  "Can't wait! It's always better eating with company",
+];
+
 const Messages = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  // Initialize from navigation state (match data)
+  useEffect(() => {
+    if (location.state?.matchId && location.state?.matchName) {
+      const matchConv: Conversation = {
+        id: location.state.matchId,
+        name: location.state.matchName,
+        isAnonymous: location.state.isAnonymous || false,
+        lastMessage: "Start chatting!",
+        unread: 0,
+        userId: location.state.matchId,
+      };
+      setConversations((prev) => {
+        const exists = prev.find((c) => c.id === matchConv.id);
+        if (!exists) return [matchConv, ...prev];
+        return prev;
+      });
+      setSelectedConversation(matchConv);
+    }
+  }, [location.state]);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -51,61 +81,34 @@ const Messages = () => {
     }
   }, [user, loading, navigate]);
 
-  // Load conversations (for now showing demo data, will be connected to real data)
-  useEffect(() => {
-    if (user) {
-      // Demo conversations - will be replaced with real data when matches are created
-      setConversations([]);
-    }
-  }, [user]);
-
-  // Subscribe to realtime messages
-  useEffect(() => {
-    if (!user || !selectedConversation) return;
-
-    const channel = supabase
-      .channel('messages-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        (payload) => {
-          const newMsg = payload.new as Message;
-          if (
-            (newMsg.sender_id === user.id || newMsg.sender_id === selectedConversation.userId) &&
-            (newMsg.sender_id === selectedConversation.userId || newMsg.sender_id === user.id)
-          ) {
-            setMessages((prev) => [...prev, newMsg]);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, selectedConversation]);
-
-  const sendMessage = async () => {
+  const sendMessage = () => {
     if (!user || !selectedConversation) return;
 
     try {
       const validated = messageSchema.parse({ content: newMessage });
 
-      const { error } = await supabase.from('messages').insert({
+      // Add user message locally
+      const userMsg: Message = {
+        id: crypto.randomUUID(),
         content: validated.content,
         sender_id: user.id,
-        receiver_id: selectedConversation.userId,
-      });
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      setNewMessage("");
 
-      if (error) {
-        toast.error('Failed to send message');
-      } else {
-        setNewMessage("");
-      }
+      // Simulate buddy response after a short delay
+      setTimeout(() => {
+        const randomResponse = BUDDY_RESPONSES[Math.floor(Math.random() * BUDDY_RESPONSES.length)];
+        const buddyMsg: Message = {
+          id: crypto.randomUUID(),
+          content: randomResponse,
+          sender_id: selectedConversation.userId,
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, buddyMsg]);
+      }, 1000 + Math.random() * 2000);
+
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);

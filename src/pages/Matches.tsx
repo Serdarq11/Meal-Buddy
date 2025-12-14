@@ -22,8 +22,14 @@ const Matches = () => {
     declineMatch(id);
   };
 
-  const handleStartChat = (matchId: string) => {
-    navigate(`/messages?match=${matchId}`);
+  const handleStartChat = (match: typeof acceptedMatches[0]) => {
+    navigate('/messages', { 
+      state: { 
+        matchId: match.id, 
+        matchName: match.name,
+        isAnonymous: match.isAnonymous 
+      } 
+    });
   };
 
   return (
@@ -200,7 +206,7 @@ const Matches = () => {
                     <div className="mt-4 pt-4 border-t border-border">
                       <Button 
                         className="w-full gradient-warm text-primary-foreground"
-                        onClick={() => handleStartChat(match.id)}
+                        onClick={() => handleStartChat(match)}
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />
                         Start Chatting
