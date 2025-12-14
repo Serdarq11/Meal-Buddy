@@ -1,9 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Users, Clock, Search, TrendingUp } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { useMatches } from "@/hooks/useMatches";
+import { toast } from "sonner";
 
 const locations = [
   { id: 1, name: "Cafeteria", users: 12, trending: true, emoji: "🍽️", description: "Main campus dining hall" },
@@ -21,19 +25,37 @@ const locations = [
 ];
 
 const upcomingMeetups = [
-  { location: "Cafeteria", time: "12:30", people: 3, spotsLeft: 1 },
-  { location: "Susam Café", time: "13:00", people: 2, spotsLeft: 2 },
-  { location: "Library Café", time: "14:00", people: 2, spotsLeft: 2 },
+  { id: 101, location: "Cafeteria", time: "12:30", people: 3, spotsLeft: 1 },
+  { id: 102, location: "Susam Café", time: "13:00", people: 2, spotsLeft: 2 },
+  { id: 103, location: "Library Café", time: "14:00", people: 2, spotsLeft: 2 },
 ];
 
 const Explore = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  const { addMatchRequest } = useMatches();
   
   const filteredLocations = locations.filter(location =>
     location.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   const trendingLocations = locations.filter(l => l.trending);
+
+  const handleJoinLocation = (locationName: string) => {
+    addMatchRequest(locationName, ["Now"], false, "random");
+    toast.success(`Joining ${locationName}!`, {
+      description: "Finding a meal buddy for you..."
+    });
+    navigate("/matches");
+  };
+
+  const handleJoinMeetup = (meetup: typeof upcomingMeetups[0]) => {
+    addMatchRequest(meetup.location, [meetup.time], false, "random");
+    toast.success(`Joined meetup at ${meetup.location}!`, {
+      description: `You'll meet at ${meetup.time}`
+    });
+    navigate("/matches");
+  };
 
   return (
     <>
@@ -76,7 +98,7 @@ const Explore = () => {
                       {trendingLocations.slice(0, 4).map((location) => (
                         <div 
                           key={location.id}
-                          className="group p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-soft transition-all cursor-pointer"
+                          className="group p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-soft transition-all"
                         >
                           <div className="flex items-start justify-between mb-3">
                             <span className="text-3xl">{location.emoji}</span>
@@ -89,9 +111,18 @@ const Explore = () => {
                             {location.name}
                           </h3>
                           <p className="text-sm text-muted-foreground mb-3">{location.description}</p>
-                          <div className="flex items-center gap-1 text-primary">
-                            <Users className="w-4 h-4" />
-                            <span className="text-sm font-medium">{location.users} people available</span>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1 text-primary">
+                              <Users className="w-4 h-4" />
+                              <span className="text-sm font-medium">{location.users} available</span>
+                            </div>
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleJoinLocation(location.name)}
+                              className="gradient-warm text-primary-foreground"
+                            >
+                              Join
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -108,9 +139,9 @@ const Explore = () => {
                     {filteredLocations.map((location) => (
                       <div 
                         key={location.id}
-                        className="group p-4 rounded-xl bg-card border border-border hover:border-primary/30 hover:shadow-soft transition-all cursor-pointer"
+                        className="group p-4 rounded-xl bg-card border border-border hover:border-primary/30 hover:shadow-soft transition-all"
                       >
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-center gap-3 mb-3">
                           <span className="text-2xl">{location.emoji}</span>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-medium text-foreground group-hover:text-primary transition-colors truncate">
@@ -122,6 +153,14 @@ const Explore = () => {
                             </div>
                           </div>
                         </div>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => handleJoinLocation(location.name)}
+                        >
+                          Join Others
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -144,10 +183,10 @@ const Explore = () => {
                   </div>
                   
                   <div className="space-y-4">
-                    {upcomingMeetups.map((meetup, index) => (
+                    {upcomingMeetups.map((meetup) => (
                       <div 
-                        key={index}
-                        className="p-4 rounded-xl bg-background border border-border hover:border-primary/30 transition-all cursor-pointer"
+                        key={meetup.id}
+                        className="p-4 rounded-xl bg-background border border-border hover:border-primary/30 transition-all"
                       >
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium text-foreground">{meetup.location}</h4>
@@ -155,7 +194,7 @@ const Explore = () => {
                             {meetup.spotsLeft} {meetup.spotsLeft === 1 ? 'spot' : 'spots'} left
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                           <div className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5" />
                             <span>{meetup.time}</span>
@@ -165,12 +204,19 @@ const Explore = () => {
                             <span>{meetup.people} joined</span>
                           </div>
                         </div>
+                        <Button 
+                          size="sm" 
+                          className="w-full gradient-warm text-primary-foreground"
+                          onClick={() => handleJoinMeetup(meetup)}
+                        >
+                          Join Meetup
+                        </Button>
                       </div>
                     ))}
                   </div>
                   
                   <p className="text-xs text-muted-foreground text-center mt-4">
-                    Join a meetup or create your own in the Dashboard
+                    Click any location or meetup to join!
                   </p>
                 </div>
               </div>
