@@ -1,58 +1,30 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MapPin, Clock, MessageCircle, Star, Users, EyeOff, Check, X } from "lucide-react";
 import { Helmet } from "react-helmet-async";
-
-const pendingMatches = [
-  {
-    id: 1,
-    name: "Anonymous User",
-    isAnonymous: true,
-    location: "Cafeteria",
-    time: "12:30",
-    interests: ["Coffee Lover", "Study Breaks"],
-    matchScore: 85
-  },
-  {
-    id: 2,
-    name: "Elif K.",
-    isAnonymous: false,
-    location: "Susam Café",
-    time: "13:00",
-    interests: ["Music", "Gaming"],
-    matchScore: 72,
-    department: "Computer Engineering"
-  }
-];
-
-const activeChats = [
-  {
-    id: 1,
-    name: "Ahmet Y.",
-    isAnonymous: false,
-    location: "Library Café",
-    time: "14:00",
-    lastMessage: "Sounds great! See you there 👋",
-    unread: 2,
-    status: "confirmed"
-  },
-  {
-    id: 2,
-    name: "Anonymous User",
-    isAnonymous: true,
-    location: "Çarşı",
-    time: "12:00",
-    lastMessage: "What's your favorite meal there?",
-    unread: 0,
-    status: "chatting"
-  }
-];
+import { useMatches } from "@/hooks/useMatches";
 
 const Matches = () => {
-  const [activeTab, setActiveTab] = useState<'pending' | 'chats'>('pending');
+  const navigate = useNavigate();
+  const { pendingMatches, acceptedMatches, acceptMatch, declineMatch } = useMatches();
+  const [activeTab, setActiveTab] = useState<'pending' | 'accepted'>('pending');
+
+  const handleAccept = (id: string) => {
+    acceptMatch(id);
+    setActiveTab('accepted');
+  };
+
+  const handleDecline = (id: string) => {
+    declineMatch(id);
+  };
+
+  const handleStartChat = (matchId: string) => {
+    navigate(`/messages?match=${matchId}`);
+  };
 
   return (
     <>
@@ -67,7 +39,7 @@ const Matches = () => {
             {/* Header */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-foreground mb-2">My Matches</h1>
-              <p className="text-muted-foreground">Manage your pending matches and active conversations</p>
+              <p className="text-muted-foreground">Manage your pending matches and accepted meal buddies</p>
             </div>
             
             {/* Tabs */}
@@ -83,16 +55,16 @@ const Matches = () => {
                 Pending ({pendingMatches.length})
               </button>
               <button
-                onClick={() => setActiveTab('chats')}
+                onClick={() => setActiveTab('accepted')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  activeTab === 'chats' 
+                  activeTab === 'accepted' 
                     ? 'gradient-warm text-primary-foreground' 
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 }`}
               >
-                Chats ({activeChats.length})
-                {activeChats.some(c => c.unread > 0) && (
-                  <span className="w-2 h-2 rounded-full bg-destructive" />
+                Accepted ({acceptedMatches.length})
+                {acceptedMatches.length > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-green-500" />
                 )}
               </button>
             </div>
@@ -135,7 +107,7 @@ const Matches = () => {
                       </div>
                       <div className="flex items-center gap-1.5 text-muted-foreground">
                         <Clock className="w-4 h-4" />
-                        <span>{match.time}</span>
+                        <span>{match.time.join(', ')}</span>
                       </div>
                     </div>
                     
@@ -148,11 +120,18 @@ const Matches = () => {
                     </div>
                     
                     <div className="flex gap-3">
-                      <Button className="flex-1 gradient-warm text-primary-foreground">
+                      <Button 
+                        className="flex-1 gradient-warm text-primary-foreground"
+                        onClick={() => handleAccept(match.id)}
+                      >
                         <Check className="w-4 h-4 mr-2" />
                         Accept
                       </Button>
-                      <Button variant="outline" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => handleDecline(match.id)}
+                      >
                         <X className="w-4 h-4 mr-2" />
                         Decline
                       </Button>
@@ -164,68 +143,77 @@ const Matches = () => {
                   <div className="text-center py-16">
                     <Users className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-2">No pending matches</h3>
-                    <p className="text-muted-foreground">Set your availability to get matched with other students</p>
+                    <p className="text-muted-foreground mb-4">Set your availability to get matched with other students</p>
+                    <Button onClick={() => navigate('/dashboard')} className="gradient-warm text-primary-foreground">
+                      Find Meal Buddy
+                    </Button>
                   </div>
                 )}
               </div>
             ) : (
               <div className="space-y-4">
-                {activeChats.map((chat) => (
-                  <div key={chat.id} className="p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all cursor-pointer">
+                {acceptedMatches.map((match) => (
+                  <div 
+                    key={match.id} 
+                    className="p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="relative">
                           <Avatar className="w-14 h-14">
                             <AvatarFallback className="gradient-warm text-primary-foreground text-lg">
-                              {chat.isAnonymous ? <EyeOff className="w-6 h-6" /> : chat.name[0]}
+                              {match.isAnonymous ? <EyeOff className="w-6 h-6" /> : match.name[0]}
                             </AvatarFallback>
                           </Avatar>
-                          {chat.status === 'confirmed' && (
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-card flex items-center justify-center">
-                              <Check className="w-3 h-3 text-white" />
-                            </div>
-                          )}
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-card flex items-center justify-center">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-foreground">{chat.name}</h3>
-                            {chat.isAnonymous && (
+                            <h3 className="font-semibold text-foreground">{match.name}</h3>
+                            {match.isAnonymous && (
                               <Badge variant="secondary" className="text-xs">Anonymous</Badge>
                             )}
-                            {chat.status === 'confirmed' && (
-                              <Badge className="text-xs bg-green-500/10 text-green-600 border-green-500/20">
-                                Confirmed
-                              </Badge>
-                            )}
+                            <Badge className="text-xs bg-green-500/10 text-green-600 border-green-500/20">
+                              Accepted
+                            </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground line-clamp-1">{chat.lastMessage}</p>
+                          {!match.isAnonymous && match.department && (
+                            <p className="text-sm text-muted-foreground">{match.department}</p>
+                          )}
                         </div>
                       </div>
                       
                       <div className="text-right">
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1">
                           <MapPin className="w-3.5 h-3.5" />
-                          <span>{chat.location}</span>
+                          <span>{match.location}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                           <Clock className="w-3.5 h-3.5" />
-                          <span>{chat.time}</span>
+                          <span>{match.time.join(', ')}</span>
                         </div>
-                        {chat.unread > 0 && (
-                          <Badge className="mt-2 gradient-warm text-primary-foreground border-0">
-                            {chat.unread} new
-                          </Badge>
-                        )}
                       </div>
+                    </div>
+                    
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <Button 
+                        className="w-full gradient-warm text-primary-foreground"
+                        onClick={() => handleStartChat(match.id)}
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Start Chatting
+                      </Button>
                     </div>
                   </div>
                 ))}
                 
-                {activeChats.length === 0 && (
+                {acceptedMatches.length === 0 && (
                   <div className="text-center py-16">
                     <MessageCircle className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-foreground mb-2">No active chats</h3>
-                    <p className="text-muted-foreground">Accept a match to start chatting</p>
+                    <h3 className="text-lg font-medium text-foreground mb-2">No accepted matches yet</h3>
+                    <p className="text-muted-foreground">Accept a pending match to start chatting</p>
                   </div>
                 )}
               </div>
