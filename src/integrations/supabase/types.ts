@@ -56,6 +56,7 @@ export type Database = {
           is_verified: boolean | null
           name: string | null
           updated_at: string | null
+          vibe: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -68,6 +69,7 @@ export type Database = {
           is_verified?: boolean | null
           name?: string | null
           updated_at?: string | null
+          vibe?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -80,6 +82,7 @@ export type Database = {
           is_verified?: boolean | null
           name?: string | null
           updated_at?: string | null
+          vibe?: string | null
         }
         Relationships: []
       }
