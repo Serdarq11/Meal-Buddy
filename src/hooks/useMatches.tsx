@@ -88,11 +88,25 @@ const departments = [
 
 const bios = [
   "Chill vibes only ☕",
-  "Always hungry 🍕",
-  "Coffee addict",
-  "Looking for study buddies",
-  "Foodie at heart",
-  "New here, let's chat!",
+  "Always hungry, never on time 🍕",
+  "Coffee addict, chaos coordinator",
+  "Looking for study buddies and snacks",
+  "Foodie at heart, broke in wallet",
+  "New here, let's grab döner!",
+  "Surviving on caffeine and hope",
+  "Will talk about cats forever 🐱",
+  "Midterm season = stress eating",
+  "Send memes, not lectures",
+  "Pro napper, amateur student",
+  "Here for the free wifi honestly",
+  "Netflix breaks between classes 📺",
+  "Existential crisis but make it fun",
+  "Just vibing through finals week",
+  "Tea over coffee, fight me",
+  "Bookworm seeking lunch buddy",
+  "Gym? I thought you said çay 🍵",
+  "Deadline? What deadline?",
+  "Living for Friday vibes only",
 ];
 
 export const MatchesProvider = ({ children }: { children: ReactNode }) => {
