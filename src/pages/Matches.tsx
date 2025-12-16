@@ -4,13 +4,22 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MapPin, Clock, MessageCircle, Star, Users, EyeOff, Check, X } from "lucide-react";
+import { MapPin, Clock, MessageCircle, Star, Users, EyeOff, Check, X, ArrowLeft } from "lucide-react";
 import { Helmet } from "react-helmet-async";
-import { useMatches } from "@/hooks/useMatches";
+import { useMatches, ManualMatchOption } from "@/hooks/useMatches";
 
 const Matches = () => {
   const navigate = useNavigate();
-  const { pendingMatches, acceptedMatches, acceptMatch, declineMatch } = useMatches();
+  const { 
+    pendingMatches, 
+    acceptedMatches, 
+    manualMatchOptions,
+    isSelectingManual,
+    acceptMatch, 
+    declineMatch,
+    selectManualMatch,
+    cancelManualSelection,
+  } = useMatches();
   const [activeTab, setActiveTab] = useState<'pending' | 'accepted'>('pending');
 
   const handleAccept = (id: string) => {
@@ -31,6 +40,96 @@ const Matches = () => {
       } 
     });
   };
+
+  const handleSelectOption = (option: ManualMatchOption) => {
+    selectManualMatch(option);
+  };
+
+  // Manual selection view
+  if (isSelectingManual && manualMatchOptions.length > 0) {
+    return (
+      <>
+        <Helmet>
+          <title>Choose Your Buddy | MealBuddy</title>
+          <meta name="description" content="Choose who you want to meet for your meal." />
+        </Helmet>
+        <div className="min-h-screen bg-background">
+          <Navbar />
+          <main className="pt-20 pb-12">
+            <div className="container mx-auto px-6 max-w-4xl">
+              {/* Header */}
+              <div className="mb-8">
+                <Button 
+                  variant="ghost" 
+                  className="mb-4 -ml-2"
+                  onClick={cancelManualSelection}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                <h1 className="text-3xl font-bold text-foreground mb-2">Choose Your Buddy</h1>
+                <p className="text-muted-foreground">
+                  {manualMatchOptions.length} people available at {manualMatchOptions[0]?.location} • {manualMatchOptions[0]?.time.join(', ')}
+                </p>
+              </div>
+
+              {/* Options Grid */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                {manualMatchOptions.map((option) => (
+                  <div 
+                    key={option.id} 
+                    className="p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-soft transition-all"
+                  >
+                    <div className="flex items-start gap-4 mb-4">
+                      <Avatar className="w-14 h-14">
+                        <AvatarFallback className="gradient-warm text-primary-foreground text-lg">
+                          {option.isAnonymous ? <EyeOff className="w-6 h-6" /> : option.name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-foreground">{option.name}</h3>
+                          {option.isAnonymous && (
+                            <Badge variant="secondary" className="text-xs">Anonymous</Badge>
+                          )}
+                        </div>
+                        {!option.isAnonymous && option.department && (
+                          <p className="text-sm text-muted-foreground">{option.department}</p>
+                        )}
+                        {option.bio && (
+                          <p className="text-sm text-muted-foreground mt-1 italic">"{option.bio}"</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full">
+                        <Star className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-sm font-medium text-primary">{option.matchScore}%</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {option.interests.map((interest, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {interest}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <Button 
+                      className="w-full gradient-warm text-primary-foreground"
+                      onClick={() => handleSelectOption(option)}
+                    >
+                      <Check className="w-4 h-4 mr-2" />
+                      Choose {option.isAnonymous ? "Anonymous" : option.name.split(' ')[0]}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
