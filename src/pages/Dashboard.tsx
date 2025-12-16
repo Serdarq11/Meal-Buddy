@@ -16,8 +16,9 @@ const locations = [
   { id: 5, name: "Susam Café", users: 7, emoji: "☕" },
   { id: 6, name: "Dorm 1 Café", users: 4, emoji: "🏠" },
   { id: 7, name: "Dorm 5 Café", users: 6, emoji: "🏠" },
-  { id: 8, name: "Library Café", users: 9, emoji: "📚" },
-  { id: 9, name: "Dorm 9 Café", users: 2, emoji: "🏠" },
+  { id: 8, name: "Dorm 9 Café", users: 2, emoji: "🏠" },
+  { id: 9, name: "Çatı Cafe", users: 5, emoji: "🏔️" },
+  { id: 10, name: "Foreign Languages Cafe", users: 4, emoji: "🌍" },
 ];
 
 const timeSlots = [

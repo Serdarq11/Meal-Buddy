@@ -17,11 +17,12 @@ const locations = [
   { id: 5, name: "Susam Café", users: 7, trending: true, emoji: "☕", description: "Best coffee on campus" },
   { id: 6, name: "Dorm 1 Café", users: 4, trending: false, emoji: "🏠", description: "Cozy dormitory café" },
   { id: 7, name: "Dorm 5 Café", users: 6, trending: false, emoji: "🏠", description: "Popular evening spot" },
-  { id: 8, name: "Library Café", users: 9, trending: true, emoji: "📚", description: "Study break favorite" },
-  { id: 9, name: "Dorm 9 Café", users: 2, trending: false, emoji: "🏠", description: "Quiet and peaceful" },
-  { id: 10, name: "Engineering Canteen", users: 11, trending: true, emoji: "⚙️", description: "Engineers' hangout" },
-  { id: 11, name: "Sports Complex Café", users: 3, trending: false, emoji: "🏃", description: "Post-workout fuel" },
-  { id: 12, name: "Art Building Café", users: 4, trending: false, emoji: "🎨", description: "Creative atmosphere" },
+  { id: 8, name: "Dorm 9 Café", users: 2, trending: false, emoji: "🏠", description: "Quiet and peaceful" },
+  { id: 9, name: "Engineering Canteen", users: 11, trending: true, emoji: "⚙️", description: "Engineers' hangout" },
+  { id: 10, name: "Sports Complex Café", users: 3, trending: false, emoji: "🏃", description: "Post-workout fuel" },
+  { id: 11, name: "Art Building Café", users: 4, trending: false, emoji: "🎨", description: "Creative atmosphere" },
+  { id: 12, name: "Çatı Cafe", users: 5, trending: true, emoji: "🏔️", description: "Rooftop vibes" },
+  { id: 13, name: "Foreign Languages Cafe", users: 4, trending: false, emoji: "🌍", description: "International atmosphere" },
 ];
 
 const upcomingMeetups = [

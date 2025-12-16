@@ -44,6 +44,27 @@ const randomNames = [
   "Can B.",
 ];
 
+const departments = [
+  // Mimarlık Fakültesi
+  "Mimarlık", "Şehir ve Bölge Planlama", "Endüstriyel Tasarım",
+  // Fen Edebiyat Fakültesi
+  "Biyolojik Bilimler", "Kimya", "Tarih", "Matematik", "Felsefe", "Fizik", "Psikoloji", "Sosyoloji", "İstatistik",
+  // İktisadi ve İdari Bilimler Fakültesi
+  "İşletme", "İktisat", "Uluslararası İlişkiler", "Siyaset Bilimi ve Kamu Yönetimi",
+  // Eğitim Fakültesi
+  "Bilgisayar ve Öğretim Teknolojileri Eğitimi", "Eğitim Bilimleri", "Temel Eğitim", "Yabancı Diller Eğitimi", "Beden Eğitimi ve Spor", "Matematik ve Fen Bilimleri Eğitimi",
+  // Mühendislik Fakültesi
+  "Havacılık ve Uzay Mühendisliği", "Kimya Mühendisliği", "İnşaat Mühendisliği", "Bilgisayar Mühendisliği", "Elektrik ve Elektronik Mühendisliği", "Mühendislik Bilimleri", "Çevre Mühendisliği", "Gıda Mühendisliği", "Jeoloji Mühendisliği", "Endüstri Mühendisliği", "Makina Mühendisliği", "Metalurji ve Malzeme Mühendisliği", "Maden Mühendisliği", "Petrol ve Doğal Gaz Mühendisliği",
+  // Enstitüler
+  "Uygulamalı Matematik", "Enformatik", "Deniz Bilimleri", "Fen Bilimleri", "Sosyal Bilimler",
+  // Meslek Yüksekokulu
+  "Elektrik Programı", "Elektronik Teknolojisi", "Endüstriyel Elektronik", "Endüstriyel Otomasyon", "Gıda Teknolojisi", "Kaynak Teknolojisi", "Teknik Programlar",
+  // Yabancı Diller Yüksekokulu
+  "Temel İngilizce", "Modern Diller", "Yabancı Diller", "Akademik Yazı Merkezi",
+  // Rektörlüğe Bağlı Bölümler
+  "Türk Dili", "Müzik ve Güzel Sanatlar"
+];
+
 export const MatchesProvider = ({ children }: { children: ReactNode }) => {
   const [matches, setMatches] = useState<MatchRequest[]>([]);
 
@@ -56,7 +77,7 @@ export const MatchesProvider = ({ children }: { children: ReactNode }) => {
       time: times,
       interests: randomInterests[Math.floor(Math.random() * randomInterests.length)],
       matchScore: Math.floor(Math.random() * 30) + 70,
-      department: !isAnonymous ? "Computer Engineering" : undefined,
+      department: !isAnonymous ? departments[Math.floor(Math.random() * departments.length)] : undefined,
       status: 'pending',
       createdAt: new Date(),
     };
