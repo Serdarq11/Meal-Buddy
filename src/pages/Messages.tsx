@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Send, ArrowLeft, EyeOff, MessageCircle } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { toast } from "sonner";
 
@@ -34,17 +35,6 @@ interface Conversation {
   userId: string;
 }
 
-const BUDDY_RESPONSES = [
-  "Hey! I'm doing great, how about you?",
-  "Nice to meet you! Looking forward to our meal together 🍽️",
-  "I'll be right there at the scheduled time!",
-  "Sounds good! See you soon at the cafeteria",
-  "Perfect! I'm already on my way",
-  "Great! What do you usually like to eat there?",
-  "Awesome! It's nice to have a meal buddy 😊",
-  "Can't wait! It's always better eating with company",
-];
-
 const Messages = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,6 +43,7 @@ const Messages = () => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
 
   // Initialize from navigation state (match data)
   useEffect(() => {
@@ -81,8 +72,8 @@ const Messages = () => {
     }
   }, [user, loading, navigate]);
 
-  const sendMessage = () => {
-    if (!user || !selectedConversation) return;
+  const sendMessage = async () => {
+    if (!user || !selectedConversation || !newMessage.trim()) return;
 
     try {
       const validated = messageSchema.parse({ content: newMessage });
@@ -96,20 +87,41 @@ const Messages = () => {
       };
       setMessages((prev) => [...prev, userMsg]);
       setNewMessage("");
+      setIsTyping(true);
 
-      // Simulate buddy response after a short delay
-      setTimeout(() => {
-        const randomResponse = BUDDY_RESPONSES[Math.floor(Math.random() * BUDDY_RESPONSES.length)];
-        const buddyMsg: Message = {
-          id: crypto.randomUUID(),
-          content: randomResponse,
-          sender_id: selectedConversation.userId,
-          created_at: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, buddyMsg]);
-      }, 1000 + Math.random() * 2000);
+      // Build chat history for context
+      const chatHistory = [...messages, userMsg].map(msg => ({
+        role: msg.sender_id === user.id ? 'user' : 'assistant',
+        content: msg.content
+      }));
+
+      // Call AI edge function
+      const { data, error } = await supabase.functions.invoke('chat-response', {
+        body: {
+          messages: chatHistory,
+          partnerName: selectedConversation.name,
+          isAnonymous: selectedConversation.isAnonymous
+        }
+      });
+
+      setIsTyping(false);
+
+      if (error) {
+        console.error('AI error:', error);
+        toast.error('Failed to get response');
+        return;
+      }
+
+      const buddyMsg: Message = {
+        id: crypto.randomUUID(),
+        content: data.reply || "Hey! 👋",
+        sender_id: selectedConversation.userId,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, buddyMsg]);
 
     } catch (error) {
+      setIsTyping(false);
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       }
@@ -242,6 +254,17 @@ const Messages = () => {
                           </div>
                         </div>
                       ))}
+                      {isTyping && (
+                        <div className="flex justify-start">
+                          <div className="bg-secondary text-secondary-foreground px-4 py-2 rounded-2xl">
+                            <span className="flex gap-1">
+                              <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                              <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Input */}
@@ -253,8 +276,13 @@ const Messages = () => {
                           placeholder="Type a message..."
                           className="flex-1"
                           onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                          disabled={isTyping}
                         />
-                        <Button onClick={sendMessage} className="gradient-warm text-primary-foreground">
+                        <Button 
+                          onClick={sendMessage} 
+                          className="gradient-warm text-primary-foreground"
+                          disabled={isTyping}
+                        >
                           <Send className="w-4 h-4" />
                         </Button>
                       </div>
