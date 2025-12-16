@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, UtensilsCrossed, MessageCircle, LogOut } from "lucide-react";
+import { Menu, X, UtensilsCrossed, MessageCircle, LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -85,6 +85,12 @@ export const Navbar = () => {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
+                    <Link to="/profile">
+                      <User className="w-4 h-4 mr-2" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/dashboard">Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -157,19 +163,29 @@ export const Navbar = () => {
                   Messages
                 </Link>
               )}
-              <div className="flex gap-3 pt-4 border-t border-border">
+              <div className="flex flex-col gap-3 pt-4 border-t border-border">
                 {user ? (
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      handleSignOut();
-                      setIsOpen(false);
-                    }}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
+                  <>
+                    <Link 
+                      to="/profile" 
+                      className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1.5"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <User className="w-4 h-4" />
+                      My Profile
+                    </Link>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        handleSignOut();
+                        setIsOpen(false);
+                      }}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Link to="/auth" className="flex-1" onClick={() => setIsOpen(false)}>
