@@ -196,6 +196,9 @@ const Matches = () => {
                           {!match.isAnonymous && match.department && (
                             <p className="text-sm text-muted-foreground">{match.department}</p>
                           )}
+                          {match.bio && (
+                            <p className="text-sm text-muted-foreground mt-1 italic">"{match.bio}"</p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -286,6 +289,9 @@ const Matches = () => {
                           </div>
                           {!match.isAnonymous && match.department && (
                             <p className="text-sm text-muted-foreground">{match.department}</p>
+                          )}
+                          {match.bio && (
+                            <p className="text-sm text-muted-foreground mt-1 italic">"{match.bio}"</p>
                           )}
                         </div>
                       </div>

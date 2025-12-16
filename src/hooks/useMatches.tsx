@@ -10,6 +10,7 @@ export interface MatchRequest {
   interests: string[];
   matchScore: number;
   department?: string;
+  bio?: string;
   status: 'pending' | 'accepted' | 'declined';
   createdAt: Date;
 }
@@ -166,6 +167,7 @@ export const MatchesProvider = ({ children }: { children: ReactNode }) => {
         interests: randomInterests[Math.floor(Math.random() * randomInterests.length)],
         matchScore: Math.floor(Math.random() * 30) + 70,
         department: !isAnonymous ? departments[Math.floor(Math.random() * departments.length)] : undefined,
+        bio: bios[Math.floor(Math.random() * bios.length)],
         status: 'pending',
         createdAt: new Date(),
       };
@@ -188,6 +190,7 @@ export const MatchesProvider = ({ children }: { children: ReactNode }) => {
       interests: option.interests,
       matchScore: option.matchScore,
       department: option.department,
+      bio: option.bio,
       status: 'pending',
       createdAt: new Date(),
     };
