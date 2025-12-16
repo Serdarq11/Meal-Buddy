@@ -1,6 +1,5 @@
 import { useState, createContext, useContext, ReactNode } from 'react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 export interface MatchRequest {
   id: string;
@@ -15,12 +14,28 @@ export interface MatchRequest {
   createdAt: Date;
 }
 
+export interface ManualMatchOption {
+  id: string;
+  name: string;
+  isAnonymous: boolean;
+  location: string;
+  time: string[];
+  interests: string[];
+  matchScore: number;
+  department?: string;
+  bio?: string;
+}
+
 interface MatchesContextType {
   pendingMatches: MatchRequest[];
   acceptedMatches: MatchRequest[];
+  manualMatchOptions: ManualMatchOption[];
+  isSelectingManual: boolean;
   addMatchRequest: (location: string, times: string[], isAnonymous: boolean, matchMode: 'random' | 'manual') => void;
   acceptMatch: (id: string) => void;
   declineMatch: (id: string) => void;
+  selectManualMatch: (option: ManualMatchOption) => void;
+  cancelManualSelection: () => void;
 }
 
 const MatchesContext = createContext<MatchesContextType | undefined>(undefined);
@@ -33,6 +48,8 @@ const randomInterests = [
   ["Sports", "Fitness"],
   ["Art", "Photography"],
   ["Food", "Cooking"],
+  ["Tech", "Coding"],
+  ["Travel", "Languages"],
 ];
 
 const randomNames = [
@@ -42,6 +59,10 @@ const randomNames = [
   "Mert S.",
   "Zeynep A.",
   "Can B.",
+  "Ayşe D.",
+  "Emre T.",
+  "Selin Ö.",
+  "Burak C.",
 ];
 
 const departments = [
@@ -65,28 +86,113 @@ const departments = [
   "Türk Dili", "Müzik ve Güzel Sanatlar"
 ];
 
+const bios = [
+  "Chill vibes only ☕",
+  "Always hungry 🍕",
+  "Coffee addict",
+  "Looking for study buddies",
+  "Foodie at heart",
+  "New here, let's chat!",
+];
+
 export const MatchesProvider = ({ children }: { children: ReactNode }) => {
   const [matches, setMatches] = useState<MatchRequest[]>([]);
+  const [manualMatchOptions, setManualMatchOptions] = useState<ManualMatchOption[]>([]);
+  const [isSelectingManual, setIsSelectingManual] = useState(false);
+  const [pendingManualRequest, setPendingManualRequest] = useState<{location: string; times: string[]; isAnonymous: boolean} | null>(null);
+
+  const generateManualOptions = (location: string, times: string[]): ManualMatchOption[] => {
+    const options: ManualMatchOption[] = [];
+    const usedNames = new Set<string>();
+    
+    for (let i = 0; i < 6; i++) {
+      let name: string;
+      do {
+        name = randomNames[Math.floor(Math.random() * (randomNames.length - 1)) + 1]; // Skip "Anonymous User"
+      } while (usedNames.has(name) && usedNames.size < randomNames.length - 1);
+      usedNames.add(name);
+      
+      const isAnon = Math.random() > 0.7;
+      
+      options.push({
+        id: crypto.randomUUID(),
+        name: isAnon ? "Anonymous User" : name,
+        isAnonymous: isAnon,
+        location,
+        time: times,
+        interests: randomInterests[Math.floor(Math.random() * randomInterests.length)],
+        matchScore: Math.floor(Math.random() * 25) + 75,
+        department: !isAnon ? departments[Math.floor(Math.random() * departments.length)] : undefined,
+        bio: bios[Math.floor(Math.random() * bios.length)],
+      });
+    }
+    
+    return options.sort((a, b) => b.matchScore - a.matchScore);
+  };
 
   const addMatchRequest = (location: string, times: string[], isAnonymous: boolean, matchMode: 'random' | 'manual') => {
+    if (matchMode === 'manual') {
+      // Generate options for manual selection
+      const options = generateManualOptions(location, times);
+      setManualMatchOptions(options);
+      setIsSelectingManual(true);
+      setPendingManualRequest({ location, times, isAnonymous });
+      
+      toast.info(`Found ${options.length} potential buddies!`, {
+        description: `Choose who you'd like to meet at ${location}`,
+      });
+    } else {
+      // Random match - create immediately
+      const newMatch: MatchRequest = {
+        id: crypto.randomUUID(),
+        name: isAnonymous ? "Anonymous User" : randomNames[Math.floor(Math.random() * (randomNames.length - 1)) + 1],
+        isAnonymous,
+        location,
+        time: times,
+        interests: randomInterests[Math.floor(Math.random() * randomInterests.length)],
+        matchScore: Math.floor(Math.random() * 30) + 70,
+        department: !isAnonymous ? departments[Math.floor(Math.random() * departments.length)] : undefined,
+        status: 'pending',
+        createdAt: new Date(),
+      };
+
+      setMatches(prev => [newMatch, ...prev]);
+      
+      toast.success(`Match request created!`, {
+        description: `Looking for a meal buddy at ${location} for ${times.join(', ')}`,
+      });
+    }
+  };
+
+  const selectManualMatch = (option: ManualMatchOption) => {
     const newMatch: MatchRequest = {
-      id: crypto.randomUUID(),
-      name: isAnonymous ? "Anonymous User" : randomNames[Math.floor(Math.random() * randomNames.length)],
-      isAnonymous,
-      location,
-      time: times,
-      interests: randomInterests[Math.floor(Math.random() * randomInterests.length)],
-      matchScore: Math.floor(Math.random() * 30) + 70,
-      department: !isAnonymous ? departments[Math.floor(Math.random() * departments.length)] : undefined,
+      id: option.id,
+      name: option.name,
+      isAnonymous: option.isAnonymous,
+      location: option.location,
+      time: option.time,
+      interests: option.interests,
+      matchScore: option.matchScore,
+      department: option.department,
       status: 'pending',
       createdAt: new Date(),
     };
 
     setMatches(prev => [newMatch, ...prev]);
+    setManualMatchOptions([]);
+    setIsSelectingManual(false);
+    setPendingManualRequest(null);
     
-    toast.success(`Match request created!`, {
-      description: `Looking for a meal buddy at ${location} for ${times.join(', ')}`,
+    toast.success(`Match request sent to ${option.name}!`, {
+      description: "They'll appear in your pending matches",
     });
+  };
+
+  const cancelManualSelection = () => {
+    setManualMatchOptions([]);
+    setIsSelectingManual(false);
+    setPendingManualRequest(null);
+    toast.info("Selection cancelled");
   };
 
   const acceptMatch = (id: string) => {
@@ -113,10 +219,14 @@ export const MatchesProvider = ({ children }: { children: ReactNode }) => {
   return (
     <MatchesContext.Provider value={{ 
       pendingMatches, 
-      acceptedMatches, 
+      acceptedMatches,
+      manualMatchOptions,
+      isSelectingManual,
       addMatchRequest, 
       acceptMatch, 
-      declineMatch 
+      declineMatch,
+      selectManualMatch,
+      cancelManualSelection,
     }}>
       {children}
     </MatchesContext.Provider>
